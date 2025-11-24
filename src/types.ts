@@ -1,4 +1,4 @@
-import { DataType, NumberDataType } from './datatypes';
+import { DataType, NumberDataType, DateDataType } from './datatypes';
 import { Schema } from './schema';
 
 export type GoogleSheetsAuth = {
@@ -21,14 +21,19 @@ export interface NumberColumnDefinition extends BaseColumnDefinition {
     autoIncrement?: boolean;
 }
 
+export interface DateColumnDefinition extends BaseColumnDefinition {
+    type: DateDataType;
+    autoIncrement?: never;
+}
+
 export interface OtherColumnDefinition extends BaseColumnDefinition {
     type: DataType;
     autoIncrement?: never;
 }
 
-export type ColumnDefinition = NumberColumnDefinition | OtherColumnDefinition;
+export type ColumnDefinition = NumberColumnDefinition | DateColumnDefinition | OtherColumnDefinition;
 
-export type SchemaType = ColumnDefinition | DataType | NumberDataType;
+export type SchemaType = ColumnDefinition | DataType | NumberDataType | DateDataType;
 
 export interface SchemaDefinition {
     [key: string]: SchemaType;

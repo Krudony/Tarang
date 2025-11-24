@@ -8,6 +8,9 @@ const UserSchema = new Schema({
     email: { type: DataTypes.String, unique: true },
     age: DataTypes.Number, // Shorthand
     isActive: { type: DataTypes.Boolean, default: true },
+    createdAt: DataTypes.Date.createdAt(),
+    updatedAt: DataTypes.Date.updatedAt(),
+    deletedAt: DataTypes.Date.deletedAt(),
 });
 
 interface User {
@@ -17,6 +20,9 @@ interface User {
     email: string;
     age: number;
     isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt?: string;
 }
 
 // Post Schema
@@ -25,6 +31,8 @@ const PostSchema = new Schema({
     title: DataTypes.String,
     content: DataTypes.String,
     userId: DataTypes.String, // Foreign Key
+    createdAt: DataTypes.Date.createdAt(),
+    updatedAt: DataTypes.Date.updatedAt(),
 });
 
 interface Post {

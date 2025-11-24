@@ -57,6 +57,9 @@ const UserSchema = new Schema({
   age: DataTypes.Number, // Shorthand
   isActive: { type: DataTypes.Boolean, default: true },
   metadata: DataTypes.JSON,
+  createdAt: DataTypes.Date.createdAt(),
+  updatedAt: DataTypes.Date.updatedAt(),
+  deletedAt: DataTypes.Date.deletedAt(), // Enables soft delete
 });
  
 // Define TypeScript Interface
@@ -187,6 +190,9 @@ Use `DataTypes` to define your schema.
 
 **Methods:**
 - `DataTypes.Number.autoIncrement()`: Creates an auto-incrementing number column.
+- `DataTypes.Date.createdAt()`: Automatically sets the current date when creating a record.
+- `DataTypes.Date.updatedAt()`: Automatically updates the date when updating a record.
+- `DataTypes.Date.deletedAt()`: Enables soft delete. When `delete()` is called, this field is set instead of removing the record.
 
 ### `Schema` Configuration
 | Property | Type | Description |

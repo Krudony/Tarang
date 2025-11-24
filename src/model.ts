@@ -1,6 +1,6 @@
 import { TarangClient } from './client';
 import { ModelConfig, RelationConfig, ColumnDefinition } from './types';
-import { DataType } from './datatypes';
+import { DataType, DateDataType } from './datatypes';
 import { parseValue, stringifyValue } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 import { createId } from '@paralleldrive/cuid2';
@@ -57,12 +57,20 @@ export class Model<T = any> {
         });
     }
 
-    async findMany(filter?: Partial<T>, options?: { include?: Record<string, boolean>, select?: Record<string, boolean>, limit?: number, skip?: number }): Promise<Partial<T>[]> {
+    async findMany(filter?: Partial<T>, options?: { include?: Record<string, boolean>, select?: Record<string, boolean>, limit?: number, skip?: number, includeDeleted?: boolean }): Promise<Partial<T>[]> {
         await this.ensureHeaders();
         const rows = await this.client.getSheetValues(`${this.sheetName}!A2:Z`);
         if (!rows) return [];
 
         let results = rows.map((row: any[]) => this.mapRowToObject(row));
+
+        // Filter out soft-deleted items unless explicitly requested
+        if (!options?.includeDeleted) {
+            const deletedAtField = this.getDeletedAtField();
+            if (deletedAtField) {
+                results = results.filter((item: any) => !item[deletedAtField]);
+            }
+        }
 
         if (filter) {
             results = this.applyFilter(results, filter);
@@ -139,7 +147,7 @@ export class Model<T = any> {
         });
     }
 
-    async findFirst(filter: Partial<T>, options?: { include?: Record<string, boolean>, select?: Record<string, boolean>, skip?: number }): Promise<Partial<T> | null> {
+    async findFirst(filter: Partial<T>, options?: { include?: Record<string, boolean>, select?: Record<string, boolean>, skip?: number, includeDeleted?: boolean }): Promise<Partial<T> | null> {
         const results = await this.findMany(filter, { ...options, limit: 1 });
         return results.length > 0 ? results[0] : null;
     }
@@ -158,17 +166,26 @@ export class Model<T = any> {
         if (!rows) return [];
 
         const updatedItems: T[] = [];
+        const updatedAtField = this.getUpdatedAtField();
+        const updateData: any = { ...data };
 
-        // We need to process rows to find matches and update them
-        // This is a bit tricky to batch efficiently without reading everything first
-        // Current implementation updates one by one which is slow but safe for MVP
+        if (updatedAtField) {
+            updateData[updatedAtField] = new Date().toISOString();
+        }
 
         for (let i = 0; i < rows.length; i++) {
             const row = rows[i];
             const item = this.mapRowToObject(row);
 
+            // Skip soft-deleted items from update unless we want to allow updating deleted items?
+            // Usually we don't update deleted items.
+            const deletedAtField = this.getDeletedAtField();
+            if (deletedAtField && (item as any)[deletedAtField]) {
+                continue;
+            }
+
             if (this.matchesFilter(item, filter)) {
-                const updatedItem = { ...item, ...data };
+                const updatedItem = { ...item, ...updateData };
                 updatedItems.push(updatedItem);
                 const newRow = this.mapObjectToRow(updatedItem);
 
@@ -181,11 +198,37 @@ export class Model<T = any> {
         return updatedItems;
     }
 
-    async delete(filter: Partial<T>): Promise<number> {
+    async delete(filter: Partial<T>, options?: { force?: boolean }): Promise<number> {
         await this.ensureHeaders();
         const rows = await this.client.getSheetValues(`${this.sheetName}!A2:Z`);
         if (!rows) return 0;
 
+        const deletedAtField = this.getDeletedAtField();
+
+        // If soft delete is enabled and not forced, perform soft delete
+        if (deletedAtField && !options?.force) {
+            let deletedCount = 0;
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const item = this.mapRowToObject(row);
+
+                if (this.matchesFilter(item, filter)) {
+                    // Skip if already deleted
+                    if ((item as any)[deletedAtField]) continue;
+
+                    const updatedItem: any = { ...item };
+                    updatedItem[deletedAtField] = new Date().toISOString();
+
+                    const newRow = this.mapObjectToRow(updatedItem);
+                    const rowIndex = i + 2;
+                    await this.client.updateValues(`${this.sheetName}!A${rowIndex}`, [newRow]);
+                    deletedCount++;
+                }
+            }
+            return deletedCount;
+        }
+
+        // Hard delete implementation
         const keptRows: any[][] = [];
         let deletedCount = 0;
 
@@ -215,12 +258,17 @@ export class Model<T = any> {
             const columnDef = this.schema.definition[key];
             let type: string;
             let isAutoIncrement = false;
+            let isCreatedAt = false;
+            let isUpdatedAt = false;
 
             if (columnDef.type instanceof DataType) {
                 type = columnDef.type.type;
                 isAutoIncrement = columnDef.type.isAutoIncrement || !!columnDef.autoIncrement;
+                if (columnDef.type instanceof DateDataType) {
+                    isCreatedAt = columnDef.type.isCreatedAt;
+                    isUpdatedAt = columnDef.type.isUpdatedAt;
+                }
             } else {
-                // Should not happen with strict types, but for runtime safety
                 type = 'string';
                 isAutoIncrement = false;
             }
@@ -234,10 +282,34 @@ export class Model<T = any> {
                     dataWithDefaults[key] = uuidv4();
                 } else if (type === 'cuid') {
                     dataWithDefaults[key] = createId();
+                } else if (type === 'date') {
+                    if (isCreatedAt || isUpdatedAt) {
+                        dataWithDefaults[key] = new Date().toISOString();
+                    }
                 }
             }
         }
         return dataWithDefaults;
+    }
+
+    private getDeletedAtField(): string | null {
+        for (const key in this.schema.definition) {
+            const columnDef = this.schema.definition[key];
+            if (columnDef.type instanceof DateDataType && columnDef.type.isDeletedAt) {
+                return key;
+            }
+        }
+        return null;
+    }
+
+    private getUpdatedAtField(): string | null {
+        for (const key in this.schema.definition) {
+            const columnDef = this.schema.definition[key];
+            if (columnDef.type instanceof DateDataType && columnDef.type.isUpdatedAt) {
+                return key;
+            }
+        }
+        return null;
     }
 
     private async getNextAutoIncrementValue(key: string): Promise<number> {
