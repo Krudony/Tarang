@@ -92,6 +92,19 @@ async function main() {
     // const deletedCount = await userModel.delete({ email: 'john@example.com' });
     // console.log('Deleted Users Count:', deletedCount);
 
+    // Find with Pagination, Selection, and Sorting
+    const pagedUsers = await userModel.findMany(
+        { isActive: true },
+        {
+            select: { name: true, email: true },
+            limit: 10,
+            skip: 0,
+            sortBy: 'age',
+            sortOrder: 'desc'
+        }
+    );
+    console.log('Paged Users (Sorted by Age desc):', pagedUsers);
+
     // Find Many Users with Select
     const selectedUsers = await userModel.findMany(undefined, {
         select: { name: true, email: true },

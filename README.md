@@ -106,13 +106,15 @@ const newUser = await userModel.create({
 // Find all users aged 25
 const users = await userModel.findMany({ age: 25 });
  
-// Find with Pagination and Selection
+// Find with Pagination, Selection, and Sorting
 const pagedUsers = await userModel.findMany(
   { isActive: true },
   { 
     select: { name: true, email: true },
     limit: 10,
-    skip: 0 
+    skip: 0,
+    sortBy: 'age',
+    sortOrder: 'desc'
   }
 );
 ```
@@ -216,7 +218,7 @@ Use `DataTypes` to define your schema.
 ### `Model` Methods
 
 - **`findMany(filter?, options?)`**: Returns an array of records.
-  - `options`: `{ include?, select?, limit?, skip? }`
+  - `options`: `{ include?, select?, limit?, skip?, sortBy?, sortOrder? }`
 - **`findFirst(filter, options?)`**: Returns the first matching record or `null`.
 - **`create(data)`**: Creates a new record. Auto-generates `uuid` and `cuid`.
 - **`update(filter, data)`**: Updates matching records. Returns updated records.

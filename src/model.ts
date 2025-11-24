@@ -57,7 +57,7 @@ export class Model<T = any> {
         });
     }
 
-    async findMany(filter?: Partial<T>, options?: { include?: Record<string, boolean>, select?: Record<string, boolean>, limit?: number, skip?: number, includeDeleted?: boolean }): Promise<Partial<T>[]> {
+    async findMany(filter?: Partial<T>, options?: { include?: Record<string, boolean>, select?: Record<string, boolean>, limit?: number, skip?: number, includeDeleted?: boolean, sortBy?: keyof T, sortOrder?: 'asc' | 'desc' }): Promise<Partial<T>[]> {
         await this.ensureHeaders();
         const rows = await this.client.getSheetValues(`${this.sheetName}!A2:Z`);
         if (!rows) return [];
@@ -74,6 +74,11 @@ export class Model<T = any> {
 
         if (filter) {
             results = this.applyFilter(results, filter);
+        }
+
+        // Apply sorting
+        if (options?.sortBy) {
+            results = this.applySort(results, options.sortBy, options.sortOrder || 'asc');
         }
 
         // Apply skip and limit
@@ -104,6 +109,17 @@ export class Model<T = any> {
             results = results.slice(0, limit);
         }
         return results;
+    }
+
+    private applySort(results: T[], sortBy: keyof T, sortOrder: 'asc' | 'desc'): T[] {
+        return results.sort((a, b) => {
+            const valA = a[sortBy];
+            const valB = b[sortBy];
+
+            if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+            if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+            return 0;
+        });
     }
 
     private async loadRelations(results: any[], include: Record<string, boolean>) {
