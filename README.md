@@ -197,6 +197,7 @@ Use `DataTypes` to define your schema.
 - `DataTypes.JSON`
 - `DataTypes.UUID`
 - `DataTypes.CUID`
+- `DataTypes.Date`
 
 **Methods:**
 - `DataTypes.Number.autoIncrement()`: Creates an auto-incrementing number column.

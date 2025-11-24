@@ -1,5 +1,5 @@
 import { TarangClient } from './client';
-import { ModelConfig, RelationConfig, ColumnDefinition } from './types';
+import { ModelConfig, RelationConfig } from './types';
 import { DataType, DateDataType } from './datatypes';
 import { parseValue, stringifyValue } from './utils';
 import { v4 as uuidv4 } from 'uuid';
