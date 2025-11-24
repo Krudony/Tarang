@@ -15,6 +15,8 @@ export function parseValue(value: string, type: string): any {
             } catch {
                 return null;
             }
+        case 'date':
+            return new Date(value);
         default:
             return value;
     }
@@ -22,6 +24,7 @@ export function parseValue(value: string, type: string): any {
 
 export function stringifyValue(value: any): string {
     if (value === null || value === undefined) return '';
+    if (value instanceof Date) return value.toISOString();
     if (typeof value === 'object') return JSON.stringify(value);
     return String(value);
 }

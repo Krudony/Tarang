@@ -55,6 +55,7 @@ const UserSchema = new Schema({
   name: DataTypes.String, // Shorthand
   email: { type: DataTypes.String, unique: true },
   age: DataTypes.Number, // Shorthand
+  birthDate: DataTypes.Date, // Plain Date field
   isActive: { type: DataTypes.Boolean, default: true },
   metadata: DataTypes.JSON,
   createdAt: DataTypes.Date.createdAt(),
@@ -68,6 +69,7 @@ interface User {
   name: string;
   email: string;
   age: number;
+  birthDate: Date;
   isActive: boolean;
   metadata: any;
 }
