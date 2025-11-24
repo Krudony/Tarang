@@ -1,3 +1,6 @@
+import { DataType, NumberDataType } from './datatypes';
+import { Schema } from './schema';
+
 export type GoogleSheetsAuth = {
     clientEmail: string;
     privateKey: string;
@@ -7,8 +10,6 @@ export type SheetConfig = {
     spreadsheetId: string;
     auth: GoogleSheetsAuth;
 };
-
-import { DataType, NumberDataType } from './datatypes';
 
 export interface BaseColumnDefinition {
     unique?: boolean;
@@ -40,12 +41,8 @@ export interface RelationConfig {
     localKey: string;
 }
 
-import { Schema } from './schema';
-
 export interface ModelConfig {
     sheetName: string;
     schema: Schema;
     relations?: Record<string, RelationConfig>;
 }
-
-export type RowData = Record<string, any>;

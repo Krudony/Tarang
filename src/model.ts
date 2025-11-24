@@ -1,14 +1,10 @@
 import { TarangClient } from './client';
-import { ModelConfig, RowData } from './types';
+import { ModelConfig, RelationConfig, ColumnDefinition } from './types';
 import { DataType } from './datatypes';
 import { parseValue, stringifyValue } from './utils';
 import { v4 as uuidv4 } from 'uuid';
 import { createId } from '@paralleldrive/cuid2';
-
-import { RelationConfig } from './types';
-
 import { Schema } from './schema';
-import { ColumnDefinition } from './types';
 
 export class Model<T = any> {
     private client: TarangClient;
