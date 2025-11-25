@@ -18,9 +18,9 @@ Turn your Google Sheets into a database with a simple, familiar API.
 ## Installation
 
 ```bash
-npm install tarang-db google-auth-library googleapis
+npm install tarang-db
 # or
-bun add tarang-db google-auth-library googleapis
+bun add tarang-db
 ```
 
 ## Prerequisites
