@@ -316,6 +316,8 @@ Use `DataTypes` to define your schema.
   - `options`: `{ include?, select?, limit?, skip?, sortBy?, sortOrder?, includeDeleted? }`
 - **`findFirst(filter, options?)`**: Returns the first matching record or `null`.
 - **`create(data)`**: Creates a new record. Auto-generates `uuid` and `cuid`. Populates `createdAt`.
+- **`createMany(data[])`**: Creates multiple records in a single batch. Returns created records.
+- **`upsert(args)`**: Creates or updates a record. `args`: `{ where, update, create }`.
 - **`update(filter, data)`**: Updates matching records. Returns updated records. Updates `updatedAt`.
 - **`delete(filter, options?)`**: Deletes matching records. Returns count of deleted records.
   - `options`: `{ force? }` - If true, performs hard delete. Otherwise, performs soft delete if `deletedAt` is configured.
