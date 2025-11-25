@@ -1,4 +1,4 @@
-# TarangDB
+# TarangDB -database-sheet
 
 A lightweight, type-safe Google Sheets ORM for Node.js and Bun, inspired by Prisma.
 
